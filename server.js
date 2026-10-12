@@ -62,7 +62,7 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`), route = url.pathname;
     if (!route.startsWith('/api/')) {
       if (req.method !== 'GET') fail(405, 'Method not allowed.');
-      const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/styles.css': ['styles.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
+      const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/arcade.js': ['arcade.js', 'text/javascript'], '/arcade.css': ['arcade.css', 'text/css'], '/styles.css': ['styles.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
       const file = files[route]; if (!file) fail(404, 'Page not found.');
       res.writeHead(200, { 'Content-Type': file[1] + '; charset=utf-8' }); res.end(readFileSync(path.join(root, 'public', file[0]))); return;
     }

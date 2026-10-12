@@ -21,7 +21,10 @@ Open **http://127.0.0.1:3000**. There are no npm dependencies to install. The ap
 - Ten points per correct answer, maximum 100. Server computes scores; answer keys stay off the browser until submission.
 - Shared leaderboard based on each player's best quiz score. Equal scores share a competition rank (1, 1, 3).
 - Saved quiz progress, total XP, levels, four achievement badges, recent history, and explanation review.
-- Responsive forest-green, cream, lime, and amber interface. Keyboard controls, native login dialog, reduced-motion support.
+- Cyberpunk arcade interface with a rotating dotted globe, animated particle network, scanning beam, orbit rings, moving ticker, and neon lime/cyan/magenta panels.
+- Click the planet to reveal environmental facts, and reveal off-screen eco challenges on interactive cards. These playful interactions do not change competitive scores.
+- Choice and lifeline particle feedback, page/question entrance transitions, score count-up, celebration particles, and optional synthesized arcade sounds (off by default).
+- Desktop and mobile layouts, keyboard controls, native login dialog, reduced-motion support, and a persistent FX pause control. Effects cap pixel density and particle counts and stop updating while the page is hidden.
 
 ## Question provenance
 
@@ -57,7 +60,8 @@ For public deployment, use a Node host with a persistent volume for SQLite, HTTP
 ## Project structure
 
 - `server.js`: HTTP API, authentication, database, quiz selection/scoring.
-- `public/index.html`, `public/styles.css`, `public/app.js`: interface.
+- `public/index.html`, `public/styles.css`, `public/app.js`: shared layout and quiz interface.
+- `public/arcade.css`, `public/arcade.js`: arcade theme, dashboard, canvas visuals and interactive effects.
 - `data/questions.json`: imported question bank.
 - `scripts/import_questions.py`: reproducible import.
 - `tests/app.test.js`: integration tests.
