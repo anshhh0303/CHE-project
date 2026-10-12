@@ -4,6 +4,14 @@
   "private": true,
   "description": "Environmental quiz and gamification app",
   "type": "module",
-  "scripts": { "start": "node server.js", "test": "node --test tests/*.test.js" },
-  "engines": { "node": ">=22.13.0" }
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "@libsql/client": "0.18.0"
+  }
 }

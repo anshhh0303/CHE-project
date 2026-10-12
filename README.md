@@ -4,13 +4,14 @@ A working environmental quiz and gamification website for CHE110 topic 16.
 
 ## Run locally
 
-Install Node.js 24 LTS (or Node.js 22.13+), then run:
+Install Node.js 24 LTS, then run:
 
 ```powershell
+npm ci
 npm start
 ```
 
-Open **http://127.0.0.1:3000**. There are no npm dependencies to install. The app creates its SQLite database in `data/ecoquest.sqlite` on first run. Keep that file to preserve accounts and scores. Do not commit it or expose it through a web server.
+Open **http://127.0.0.1:3000**. By default the app creates its SQLite database in `data/ecoquest.sqlite` on first run. Keep that file to preserve accounts and scores. Do not commit it or expose it through a web server. With `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` configured, the server uses Turso instead. Optional local settings load from `.env`.
 
 ## Features
 
@@ -55,11 +56,13 @@ Tests start an isolated server/database and exercise account creation, duplicate
 
 The default server binds to localhost. For a classroom LAN demo, set `HOST=0.0.0.0` and use the host computer's local IP address (subject to its firewall). All players must connect to the same server to share a leaderboard.
 
-For public deployment, use a Node host with a persistent volume for SQLite, HTTPS through a reverse proxy, and `COOKIE_SECURE=1`. Configure `DB_PATH`, `HOST`, and `PORT` as needed. Ephemeral or static hosting will not preserve the shared database. Account recovery, email verification, and distributed production abuse protection are outside this prototype's scope.
+For the prepared free deployment, follow [DEPLOY.md](DEPLOY.md): Render hosts Node and Turso preserves the shared database. `render.yaml` configures the service, HTTPS cookies and a database health check. Render deployment refuses to start without Turso credentials to prevent lost accounts on temporary storage. A host with a persistent volume can alternatively use SQLite with `DB_PATH`, `HOST`, `PORT` and `COOKIE_SECURE=1`. Account recovery, email verification, and distributed production abuse protection are outside this prototype's scope.
 
 ## Project structure
 
 - `server.js`: HTTP API, authentication, database, quiz selection/scoring.
+- `database.js`: asynchronous SQLite/Turso access and atomic quiz transactions.
+- `render.yaml`, `DEPLOY.md`: hosting configuration and deployment walkthrough.
 - `public/index.html`, `public/styles.css`, `public/app.js`: shared layout and quiz interface.
 - `public/arcade.css`, `public/arcade.js`: arcade theme, dashboard, canvas visuals and interactive effects.
 - `data/questions.json`: imported question bank.

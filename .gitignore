@@ -5,3 +5,6 @@ data/*.parquet
 data/*.zip
 *.log
 tmp/
+.env
+.env.*
+!.env.example
