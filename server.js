@@ -45,7 +45,9 @@ function quizView(row) {
 }
 function result(row, user) {
   const entries = JSON.parse(row.questions), answers = JSON.parse(row.answers);
-  return { score: row.score, lifelines: Object.keys(JSON.parse(row.lifelines)), profile: profile(user), review: entries.map((entry, i) => {
+  const prior = db.prepare('SELECT COUNT(*) attempts, MAX(score) best FROM quizzes WHERE user_id=? AND completed IS NOT NULL AND rowid < (SELECT rowid FROM quizzes WHERE id=?)').get(user.id, row.id);
+  const companion = { mood: prior.attempts === 0 || row.score > prior.best ? 'happy' : row.score < prior.best ? 'angry' : 'calm', firstQuiz: prior.attempts === 0, previousBest: prior.best, attempt: prior.attempts + 1 };
+  return { score: row.score, companion, lifelines: Object.keys(JSON.parse(row.lifelines)), profile: profile(user), review: entries.map((entry, i) => {
     const q = byId.get(entry.id); return { question: q.question, choices: entry.order.map(j => q.choices[j]), selected: answers[i], correct: entry.order.indexOf(q.correct), explanation: q.explanation, source: q.source, sourceUrl: q.sourceUrl, category: q.category };
   }) };
 }
@@ -62,7 +64,7 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`), route = url.pathname;
     if (!route.startsWith('/api/')) {
       if (req.method !== 'GET') fail(405, 'Method not allowed.');
-      const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/arcade.js': ['arcade.js', 'text/javascript'], '/arcade.css': ['arcade.css', 'text/css'], '/styles.css': ['styles.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
+      const files = { '/': ['index.html', 'text/html'], '/app.js': ['app.js', 'text/javascript'], '/arcade.js': ['arcade.js', 'text/javascript'], '/companion.js': ['companion.js', 'text/javascript'], '/arcade.css': ['arcade.css', 'text/css'], '/micro.css': ['micro.css', 'text/css'], '/styles.css': ['styles.css', 'text/css'], '/favicon.svg': ['favicon.svg', 'image/svg+xml'] };
       const file = files[route]; if (!file) fail(404, 'Page not found.');
       res.writeHead(200, { 'Content-Type': file[1] + '; charset=utf-8' }); res.end(readFileSync(path.join(root, 'public', file[0]))); return;
     }
@@ -143,4 +145,4 @@ const server = http.createServer(async (req, res) => {
     fail(404, 'Endpoint not found.');
   } catch (error) { if (!error.status) console.error(error); send(error.status || 500, { error: error.status ? error.message : 'Something went wrong. Please try again.' }); }
 });
-server.listen(Number(process.env.PORT || 3000), process.env.HOST || '127.0.0.1', () => console.log(`EcoQuest is running at http://${process.env.HOST || '127.0.0.1'}:${process.env.PORT || 3000}`));
+server.listen(Number(process.env.PORT || 3000), process.env.HOST || '127.0.0.1', () => console.log(`Groot Mode is running at http://${process.env.HOST || '127.0.0.1'}:${process.env.PORT || 3000}`));

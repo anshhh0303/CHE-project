@@ -1,9 +1,11 @@
+import { monster } from './companion.js';
 // All effects are local: no animation libraries, trackers, or external assets.
 const preference = key => { try { return localStorage.getItem(key); } catch { return null; } };
 const save = (key, value) => { try { localStorage.setItem(key, value); } catch { /* Private browser modes can disable storage. */ } };
 const media = matchMedia('(prefers-reduced-motion: reduce)');
 let motionPaused = preference('eq-motion') === 'off' || media.matches;
 let soundOn = preference('eq-sound') === 'on', audio, lastFrame = 0, animationId;
+let volume = Math.max(0,Math.min(1,Number(preference('eq-volume') ?? '.7'))), lastTone=0;
 let orb = null, orbAngle = 0, boost = 0, lastScene = '', particleWidth = 0, particleHeight = 0;
 const pointer = { x: -1000, y: -1000 }, particles = [], sparks = [];
 const canvas = document.querySelector('#ambient-field'), context = canvas.getContext('2d');
@@ -87,11 +89,16 @@ export function burst(x=innerWidth/2,y=innerHeight*.4,count=28) {
   if(sparks.length>180)sparks.splice(0,sparks.length-180);
 }
 export function tone(kind='click') {
-  if(!soundOn)return;
-  try{audio ||= new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.connect(gain);gain.connect(audio.destination);oscillator.type='sine';const now=audio.currentTime;oscillator.frequency.setValueAtTime(kind==='success'?520:kind==='lifeline'?330:220,now);oscillator.frequency.exponentialRampToValueAtTime(kind==='success'?1040:440,now+.14);gain.gain.setValueAtTime(.045,now);gain.gain.exponentialRampToValueAtTime(.001,now+.2);oscillator.start(now);oscillator.stop(now+.21);}catch{/* Sound is optional on unsupported browsers. */}
+  if(!soundOn||volume===0)return;
+  const nowMs=performance.now();if(kind==='hover'&&nowMs-lastTone<160)return;lastTone=nowMs;
+  const tunes={click:[330,440],hover:[740],scan:[220,440,880],field:[392,523],lifeline:[262,392,523],answer:[440,660],success:[523,659,784,1047],happy:[523,784,1047,1319],angry:[220,185,147],calm:[392,523,392],toggle:[440,880]};
+  try{audio ||= new (window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const notes=tunes[kind]||tunes.click,now=audio.currentTime;
+    notes.forEach((frequency,i)=>{const oscillator=audio.createOscillator(),gain=audio.createGain(),start=now+i*.085;oscillator.connect(gain);gain.connect(audio.destination);oscillator.type=kind==='angry'?'triangle':'sine';oscillator.frequency.setValueAtTime(frequency,start);const peak=volume*(kind==='hover'?.07:.19);gain.gain.setValueAtTime(.001,start);gain.gain.linearRampToValueAtTime(peak,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+.16);oscillator.start(start);oscillator.stop(start+.18);});
+  }catch{/* Sound is optional on unsupported browsers. */}
 }
 function syncControls(){document.body.classList.toggle('motion-paused',motionPaused);const m=document.querySelector('#motion-toggle'),s=document.querySelector('#sound-toggle');m.textContent=motionPaused?'FX: OFF':'FX: ON';m.setAttribute('aria-pressed',String(motionPaused));m.title=motionPaused?'Enable decorative animations':'Pause decorative animations';s.textContent=soundOn?'SOUND: ON':'SOUND: OFF';s.setAttribute('aria-pressed',String(soundOn));s.title=soundOn?'Mute arcade sounds':'Enable optional arcade sounds';if(motionPaused){context.clearRect(0,0,particleWidth,particleHeight);drawGlobe();}}
 export function mountScene() {
+  document.querySelectorAll('.choice').forEach(choice=>{choice.insertAdjacentHTML('beforeend',`<span class="option-monster" aria-hidden="true">${monster('thinking')}<span class="monster-whisper">hmm…</span></span>`);});
   orb=document.querySelector('.orb-canvas');
   const question=document.querySelector('.quiz-meta strong')?.textContent || '';
   const key=location.hash+question;
@@ -105,13 +112,18 @@ export function mountScene() {
   } }
 }
 document.querySelector('#motion-toggle').addEventListener('click',()=>{motionPaused=!motionPaused;save('eq-motion',motionPaused?'off':'on');syncControls();});
-document.querySelector('#sound-toggle').addEventListener('click',()=>{soundOn=!soundOn;save('eq-sound',soundOn?'on':'off');syncControls();tone('success');});
+document.querySelector('#sound-toggle').addEventListener('click',()=>{soundOn=!soundOn;save('eq-sound',soundOn?'on':'off');syncControls();tone('toggle');});
+const volumeInput=document.querySelector('#sound-volume');volumeInput.value=Math.round(volume*100);document.querySelector('#volume-value').textContent=`${volumeInput.value}%`;
+volumeInput.addEventListener('input',()=>{volume=Number(volumeInput.value)/100;save('eq-volume',String(volume));document.querySelector('#volume-value').textContent=`${volumeInput.value}%`;});
+volumeInput.addEventListener('change',()=>tone('toggle'));
+document.addEventListener('pointerover',event=>{const target=event.target.closest('.choice:not(:disabled),nav a');if(target&&!target.contains(event.relatedTarget))tone('hover');});
+document.addEventListener('focusin',event=>{if(event.target.matches('.choice:not(:disabled),nav a'))tone('hover');});
 media.addEventListener('change',event=>{if(event.matches){motionPaused=true;syncControls();}});
-document.addEventListener('pointermove',event=>{pointer.x=event.clientX;pointer.y=event.clientY;if(motionPaused||event.pointerType!=='mouse')return;const card=event.target.closest('.field-card,.lifeline-card');if(card){const r=card.getBoundingClientRect();card.style.setProperty('--rx',`${-(event.clientY-r.y-r.height/2)/25}deg`);card.style.setProperty('--ry',`${(event.clientX-r.x-r.width/2)/25}deg`);}});
-document.addEventListener('pointerout',event=>{const card=event.target.closest?.('.field-card,.lifeline-card');if(card&&!card.contains(event.relatedTarget)){card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');}});
+document.addEventListener('pointermove',event=>{pointer.x=event.clientX;pointer.y=event.clientY;if(motionPaused||event.pointerType!=='mouse')return;const card=event.target.closest('.field-card,.lifeline-card,.holo-system');if(card){const r=card.getBoundingClientRect();card.style.setProperty('--rx',`${-(event.clientY-r.y-r.height/2)/25}deg`);card.style.setProperty('--ry',`${(event.clientX-r.x-r.width/2)/25}deg`);}});
+document.addEventListener('pointerout',event=>{const card=event.target.closest?.('.field-card,.lifeline-card,.holo-system');if(card&&!card.contains(event.relatedTarget)){card.style.setProperty('--rx','0deg');card.style.setProperty('--ry','0deg');}});
 document.addEventListener('click',event=>{
   const button=event.target.closest('button,a');if(!button||button.disabled)return;
-  if(!button.id.endsWith('-toggle'))tone(button.dataset.life?'lifeline':'click');
+  if(!button.id.endsWith('-toggle'))tone(button.dataset.life?'lifeline':button.dataset.action==='scan'?'scan':button.dataset.action==='field'?'field':button.dataset.action==='answer'?'answer':'click');
   if(button.dataset.action==='scan'){const fact=facts[scans%facts.length];scans++;boost=35;document.querySelector('#scan-message').textContent=`${fact[0].toUpperCase()} / ${fact[1]}`;document.querySelector('#scan-count').textContent=`${String((scans-1)%5+1).padStart(2,'0')} / 05`;const r=button.getBoundingClientRect();burst(r.x+r.width/2,r.y+r.height/2,24);if(!motionPaused)button.animate([{transform:'scale(1)'},{transform:'scale(.96)'},{transform:'scale(1)'}],{duration:400});}
   if(button.dataset.action==='field'){const expanded=button.classList.toggle('is-flipped');button.setAttribute('aria-expanded',String(expanded));button.querySelector('.field-bottom').innerHTML=expanded?'SIDE QUEST ACCEPTED <span>✓</span>':'REVEAL YOUR SIDE QUEST <span>+</span>';if(!motionPaused)button.animate([{opacity:.65,transform:'rotateY(-7deg)'},{opacity:1,transform:'rotateY(0)'}],{duration:350});}
   if(button.dataset.choice!==undefined||button.dataset.life){const r=button.getBoundingClientRect();burst(r.right-20,r.y+r.height/2,12);}

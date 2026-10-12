@@ -1,4 +1,4 @@
-# EcoQuest
+# Groot Mode
 
 A working environmental quiz and gamification website for CHE110 topic 16.
 
@@ -67,3 +67,7 @@ For public deployment, use a Node host with a persistent volume for SQLite, HTTP
 - `tests/app.test.js`: integration tests.
 
 To demonstrate: create two accounts, finish a quiz with each, use both lifelines, compare the shared leaderboard, then open a profile and review the explanations. The group can use screenshots and explain this flow in its project report and video.
+
+## Groot Mode companion and sound
+
+Sprig is an original vector plant-alien mascot. It thinks on answer hover or keyboard selection, celebrates the first completed quiz and improvements over the previous personal best, gets playfully angry below that best, and stays calm on a tie. Reaction metadata comes from earlier completed quizzes on the server, so history reviews remain consistent. Optional synthesized sound has distinct hover, click, navigation, scan, lifeline, answer and result cues, with a saved 0–100% volume control (70% default). Sound remains off until enabled. The tree logo animates; the Earth tilts in faux 3D; Sound/FX switches use tactile neumorphic states. Existing accounts, cookies and database paths are retained.

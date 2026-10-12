@@ -56,6 +56,13 @@ test('accounts, private quizzes, lifelines, scoring, shared ranks, and persisten
     assert.deepEqual(leaders.map(p=>[p.username,p.rank,p.best]),[['EcoAlice',1,100],['EcoBob',1,100],['EcoCarol',3,80]]);
     await finish(alice,40); const profile=(await request('me',undefined,alice)).data.user;
     assert.equal(profile.quizzes,2); assert.equal(profile.best,100); assert.equal(profile.xp,140); assert.equal(profile.rank,1);
+    const historyResult=(await request(`quizzes/${aliceQuiz}/result`,undefined,alice)).data;
+    assert.equal(historyResult.companion.firstQuiz,true); assert.equal(historyResult.companion.mood,'happy');
+    const lower=(await request(`quizzes/${profile.history[0].id}/result`,undefined,alice)).data;
+    assert.equal(lower.companion.mood,'angry'); assert.equal(lower.companion.previousBest,100);
+    const improvedId=await finish(carol,90); const improved=(await request(`quizzes/${improvedId}/result`,undefined,carol)).data;
+    assert.equal(improved.companion.mood,'happy'); assert.equal(improved.companion.firstQuiz,false); assert.equal(improved.companion.previousBest,80);
+    const tieId=await finish(carol,90); assert.equal((await request(`quizzes/${tieId}/result`,undefined,carol)).data.companion.mood,'calm');
     const sqlite=new DatabaseSync(dbPath); const saved=sqlite.prepare('SELECT password,salt FROM users WHERE username=?').get('EcoAlice'); assert.notEqual(saved.password,'GreenPlanet123!'); assert.equal(saved.password.length,128); assert.equal(saved.salt.length,32); sqlite.close();
     await stop(); await start(); assert.equal((await request('me',undefined,alice)).data.user.xp,140);
     assert.equal((await request(`quizzes/${aliceQuiz}/result`,undefined,alice)).data.review.length,10);

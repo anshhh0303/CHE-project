@@ -28,3 +28,9 @@ The decorative canvas could increase the hero height after repeated viewport cha
 ## Readiness scope
 
 The local educational prototype is ready for demonstration. Public internet hosting is a separate deployment step; the question bank and approximate difficulty labels still benefit from teacher review before formal assessment. Test accounts used for browser checks are kept in a separate ignored database, not in the main leaderboard.
+
+## Groot Mode companion update
+
+- Added passing integration assertions for first-quiz happiness, lower-than-previous-best anger, improved-best happiness, and equal-best calm. History reactions use the best score before that quiz, not the latest best.
+- Browser verified happy and angry history views, four thinking mascots on answer options, keyboard-selected mascot animation, saved 100% volume, Sound off/on, tactile switch shadows, faux-3D perspective and animated logo. No console errors or warnings.
+- Responsive widths 320, 390, 768 and 1440 had no horizontal overflow; hero sizes stayed stable. FX pause disables logo and mascot animations.
