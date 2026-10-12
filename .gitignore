@@ -1,0 +1,7 @@
+node_modules/
+.build-deps/
+data/*.sqlite*
+data/*.parquet
+data/*.zip
+*.log
+tmp/
